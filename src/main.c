@@ -155,6 +155,28 @@ struct Bilhete* sessao_salvar_bilhete(
 void sala_exibir_lugares(struct Sala *sala)
 {
   // @todo: Implementar função para exibir a matriz de lugares de uma sala.
+  char coluna [5]= {'A', 'B','C', 'D', 'E'};
+  
+	printf("  1 2 3 4 5\n");
+	printf("+ - - - - -\n");
+  
+  
+  	for(int i = 0; i < SALA_LINHAS; i++){
+  		
+  		printf("%c|", coluna[i]);
+  		
+  		for(int k = 0; k < SALA_COLUNAS; k++){
+  			if(sala->lugares[i][k]){
+  				printf("X ");
+			  }
+			  else{
+			  	printf("D ");
+			  }
+  			}
+  			
+  		printf("\n");
+	}
+  
 }
 
 bool sala_reservar_lugar(struct Sala *sala, char linha, unsigned int coluna)

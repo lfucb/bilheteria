@@ -148,20 +148,23 @@ struct Bilhete* sessao_salvar_bilhete(
   bool meia_entrada,
   bool combo
 ) {
-    unsigned int valor_p, preco_b, lugar_c;
-    char lugar_l, filme_n [65];
-    bool meia, combo_use;
+    
+    sessao->bilhetes->valor_pago = sala->preco_bilhete;
+     if (meia_entrada) {
+        sessao->bilhetes->valor_pago /= 2; 
+    }
 
+    if (combo) {
+        sessao->bilhetes->valor_pago += PRECO_COMBO; 
+    }
+
+    
+    sessao->bilhetes[sessao->indice_bilhete].lugar_coluna = lugar_coluna;
+    sessao->bilhetes[sessao->indice_bilhete].lugar_linha = lugar_linha;
+    sessao->bilhetes[sessao->indice_bilhete].meia_entrada = meia_entrada;
+    sessao->bilhetes[sessao->indice_bilhete].combo = combo;
     sessao->bilhetes[sessao->indice_bilhete].id = sessao->indice_bilhete + 1;
-    sessao->bilhetes[sessao->indice_bilhete].sala->filme[65] = filme_n;
-    sessao->bilhetes[sessao->indice_bilhete].sala->preco_bilhete = preco_b;
-    sessao->bilhetes[sessao->indice_bilhete].valor_pago = valor_p;
-    sessao->bilhetes[sessao->indice_bilhete].lugar_coluna = lugar_c;
-    sessao->bilhetes[sessao->indice_bilhete].lugar_linha = lugar_l;
-    sessao->bilhetes[sessao->indice_bilhete].meia_entrada = meia;
-    sessao->bilhetes[sessao->indice_bilhete].combo = combo_use;
-
-    sessao->indice_bilhete++;
+    
 
     return &sessao->bilhetes[sessao->indice_bilhete];
 }

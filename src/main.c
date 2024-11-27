@@ -148,13 +148,53 @@ struct Bilhete* sessao_salvar_bilhete(
   bool meia_entrada,
   bool combo
 ) {
-  // @todo: Implementar função para salvar bilhete em uma sessão.
-  return NULL;
+    
+    sessao->bilhetes->valor_pago = sala->preco_bilhete;
+     if (meia_entrada) {
+        sessao->bilhetes->valor_pago /= 2; 
+    }
+
+    if (combo) {
+        sessao->bilhetes->valor_pago += PRECO_COMBO; 
+    }
+
+    
+    sessao->bilhetes[sessao->indice_bilhete].lugar_coluna = lugar_coluna;
+    sessao->bilhetes[sessao->indice_bilhete].lugar_linha = lugar_linha;
+    sessao->bilhetes[sessao->indice_bilhete].meia_entrada = meia_entrada;
+    sessao->bilhetes[sessao->indice_bilhete].combo = combo;
+    sessao->bilhetes[sessao->indice_bilhete].id = sessao->indice_bilhete + 1;
+    
+
+    return &sessao->bilhetes[sessao->indice_bilhete];
 }
 
 void sala_exibir_lugares(struct Sala *sala)
 {
-  // @todo: Implementar função para exibir a matriz de lugares de uma sala.
+    int k = 0, i = 0;
+    char coluna [5]= {'A', 'B','C', 'D', 'E'};
+  
+    printf("  1 2 3 4 5\n");
+	  printf("+ - - - - -\n");
+  
+  	for(int i; i < SALA_LINHAS; i++){
+  		
+  	printf("%c|", coluna[i]);
+  		
+  	for(int k; k < SALA_COLUNAS; k++){
+
+  	  if(sala->lugares[i][k]){
+  	    printf("X ");
+		  }
+
+	    else{
+		    printf("D ");
+		  }
+  	}
+  			
+  	printf("\n");
+    }
+      
 }
 
 bool sala_reservar_lugar(struct Sala *sala, char linha, unsigned int coluna)

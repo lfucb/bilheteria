@@ -194,6 +194,7 @@ void menu_cancelamento(struct Sessao *sessao)
   struct Bilhete *bilhete = &sessao->bilhetes[numero_bilhete - 1];
 
   bilhete_cancelar(bilhete);
+  sala_liberar_lugar(bilhete->sala, bilhete->lugar_linha, bilhete->lugar_coluna);
 
   puts("Compra cancelada com sucesso!");
 }

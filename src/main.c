@@ -76,7 +76,7 @@ int main(void)
       },
     },
   };
-  
+
   menu_principal(&sessao);
 
   return EXIT_SUCCESS;

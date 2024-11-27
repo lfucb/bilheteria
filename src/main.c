@@ -76,8 +76,19 @@ int main(void)
       },
     },
   };
-
-  menu_principal(&sessao);
+    struct Bilhete bilhete = {
+      .id = 1,
+      .sala = &sessao.salas [0],
+      .combo = true,
+      .lugar_coluna = 0,
+      .lugar_linha = 'A',
+      .meia_entrada = true,
+      .valor_pago = 1525,
+      .cancelado = false,
+    };
+    
+  bilhete_imprimir(&bilhete);
+  // menu_principal(&sessao);
 
   return EXIT_SUCCESS;
 }
@@ -170,6 +181,13 @@ void sala_liberar_lugar(struct Sala *sala, char linha, unsigned int coluna)
 
 void bilhete_imprimir(struct Bilhete *bilhete)
 {
+  char *nome[] = {"Nao","Sim"};
+  printf("Bilhete N⁰: %d\n",bilhete->id);
+  printf("Filme: %s\n",bilhete->sala->filme);
+  printf("Valor pago: R$ %.2f\n", bilhete->valor_pago / 100.0 );
+  printf("Lugar: %c%d \n",bilhete->lugar_linha, bilhete->lugar_coluna);
+  printf("Meia-entrada: %s\n", nome[bilhete->meia_entrada]);
+  printf("Incluir combo: %s\n",nome[bilhete->combo]);
   // @todo: Implementar função para imprimir as informações de um bilhete na tela.
 }
 

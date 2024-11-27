@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <limits.h>
 
 // Preço em centavos do combo de refrigante e pipoca
 #define PRECO_COMBO 1500
@@ -57,6 +59,7 @@ void sala_liberar_lugar(struct Sala *sala, char linha, unsigned int coluna);
 void bilhete_imprimir(struct Bilhete *bilhete);
 void bilhete_cancelar(struct Bilhete *bilhete);
 
+int lscanf(char *text, const char *format, ...);
 
 int main(void)
 {
@@ -93,8 +96,7 @@ void menu_principal(struct Sessao *sessao)
     puts("3. Cancelamento de compra");
     puts("4. Finalizar sessao");
 
-    fputs("\nEscolha a opcao: ", stdout);
-    scanf("%u", &opcao);
+    lscanf("\nEscolha a opcao: ", "%u", &opcao);
 
     switch (opcao)
     {
@@ -108,6 +110,7 @@ void menu_principal(struct Sessao *sessao)
       menu_cancelamento(sessao);
       break;
     case 4:
+      putchar('\n');
       sessao_exibir_relatorio(sessao);
       exit(EXIT_SUCCESS);
     }
@@ -116,28 +119,121 @@ void menu_principal(struct Sessao *sessao)
 
 void menu_reservar_lugar(struct Sessao *sessao)
 {
-  // @todo: Implementar menu para reserva de lugar.
+  unsigned int opcao;
+  char resposta;
+  char linha;
+  unsigned int coluna;
+  int ret;
+
+  sessao_listar_salas(sessao);
+
+  do {
+    ret = lscanf("\nEscolha a sala: ", "%u", &opcao);
+  } while(ret != 1 || opcao < 1 || opcao > SESSAO_NR_SALAS);
+
+  struct Sala *sala = &sessao->salas[opcao - 1];
+
+  sala_exibir_lugares(sala);
+
+  do {
+    ret = lscanf("\nEscolha o lugar (ex.: A1): ", "%c%u", &linha, &coluna);
+
+    if (linha < 'A' || linha > 'E' || coluna < 1 || coluna > 5)
+    {
+      continue;
+    }
+
+    if (ret == 2 && ! sala->lugares[linha - 'A'][coluna - 1])
+    {
+      break;
+    }
+  } while (true);
+
+  lscanf("E meia-entrada? [s/n] ", "%c", &resposta);
+
+  bool meia_entrada = (resposta == 's');
+
+  lscanf("Deseja incluir um combo de pipoca e refrigerante? [s/n] ", "%c", &resposta);
+
+  bool combo = (resposta == 's');
+
+  struct Bilhete *bilhete = sessao_salvar_bilhete(sessao, sala, linha, coluna, meia_entrada, combo);
+
+  sala_reservar_lugar(sala, linha, coluna);
+
+  putchar('\n');
+  bilhete_imprimir(bilhete);
+  putchar('\n');
 }
 
 void menu_impressao_bilhete(struct Sessao *sessao)
 {
-  // @todo: Implementar menu para reserva de lugar.
+  unsigned int numero_bilhete;
+  int ret;
+
+  do {
+    ret = lscanf("Digite o numero do bilhete: ", "%u", &numero_bilhete);
+  } while(ret != 1 || numero_bilhete < 1 || numero_bilhete > sessao->indice_bilhete);
+
+  struct Bilhete *bilhete = &sessao->bilhetes[numero_bilhete - 1];
+
+  putchar('\n');
+  bilhete_imprimir(bilhete);
+  putchar('\n');
 }
 
 void menu_cancelamento(struct Sessao *sessao)
 {
-  // @todo: Implementar menu para reserva de lugar.
+  unsigned int numero_bilhete;
+  int ret;
+
+  do {
+    ret = lscanf("Digite o numero do bilhete: ", "%u", &numero_bilhete);
+  } while(ret != 1 || numero_bilhete < 1 || numero_bilhete > sessao->indice_bilhete);
+
+  struct Bilhete *bilhete = &sessao->bilhetes[numero_bilhete - 1];
+
+  bilhete_cancelar(bilhete);
+  sala_liberar_lugar(bilhete->sala, bilhete->lugar_linha, bilhete->lugar_coluna);
+
+  puts("Compra cancelada com sucesso!");
 }
 
 
 void sessao_listar_salas(struct Sessao *sessao)
 {
-  // @todo: Implementar função para listar salas
+  for (int i = 0; i < SESSAO_NR_SALAS; i++)
+  {
+    printf("Sala %d: %s\n", i + 1, sessao->salas[i].filme);
+  }
 }
 
 void sessao_exibir_relatorio(struct Sessao *sessao)
 {
-  // @todo: Implementar função para exibir relatório de uma sessão.
+  unsigned int total_bilhetes_vendidos = 0;
+  unsigned int total_combos_vendidos = 0;
+  unsigned int total_arrecadado = 0;
+
+  for (int i = 0; i < sessao->indice_bilhete; i++)
+  {
+    if (sessao->bilhetes[i].cancelado)
+    {
+      continue;
+    }
+
+    total_arrecadado += sessao->bilhetes[i].valor_pago;
+
+    if (sessao->bilhetes[i].combo)
+    {
+      total_combos_vendidos++;
+    }
+
+    total_bilhetes_vendidos++;
+  }
+
+  printf("Bilhetes vendidos: %d\n", total_bilhetes_vendidos);
+  printf("Combos vendidos: %d\n", total_combos_vendidos);
+  printf("Total arrecadado: R$ %.2f\n", total_arrecadado / 100.0);
 }
 
 struct Bilhete* sessao_salvar_bilhete(
@@ -148,64 +244,70 @@ struct Bilhete* sessao_salvar_bilhete(
   bool meia_entrada,
   bool combo
 ) {
-    
-    sessao->bilhetes->valor_pago = sala->preco_bilhete;
-     if (meia_entrada) {
-        sessao->bilhetes->valor_pago /= 2; 
-    }
+  unsigned int valor_pago = sala->preco_bilhete;
+  if (meia_entrada) {
+    valor_pago /= 2;
+  }
 
-    if (combo) {
-        sessao->bilhetes->valor_pago += PRECO_COMBO; 
-    }
+  if (combo) {
+    valor_pago += PRECO_COMBO;
+  }
 
-    
-    sessao->bilhetes[sessao->indice_bilhete].lugar_coluna = lugar_coluna;
-    sessao->bilhetes[sessao->indice_bilhete].lugar_linha = lugar_linha;
-    sessao->bilhetes[sessao->indice_bilhete].meia_entrada = meia_entrada;
-    sessao->bilhetes[sessao->indice_bilhete].combo = combo;
-    sessao->bilhetes[sessao->indice_bilhete].id = sessao->indice_bilhete + 1;
-    
 
-    return &sessao->bilhetes[sessao->indice_bilhete];
+  sessao->bilhetes[sessao->indice_bilhete].sala = sala;
+  sessao->bilhetes[sessao->indice_bilhete].lugar_coluna = lugar_coluna;
+  sessao->bilhetes[sessao->indice_bilhete].lugar_linha = lugar_linha;
+  sessao->bilhetes[sessao->indice_bilhete].meia_entrada = meia_entrada;
+  sessao->bilhetes[sessao->indice_bilhete].combo = combo;
+  sessao->bilhetes[sessao->indice_bilhete].valor_pago = valor_pago;
+  sessao->bilhetes[sessao->indice_bilhete].id = sessao->indice_bilhete + 1;
+
+  sessao->indice_bilhete++;
+  return &sessao->bilhetes[sessao->indice_bilhete - 1];
 }
 
 void sala_exibir_lugares(struct Sala *sala)
 {
-    int k = 0, i = 0;
+    int k, i;
     char coluna [5]= {'A', 'B','C', 'D', 'E'};
-  
+
     printf("  1 2 3 4 5\n");
-	  printf("+ - - - - -\n");
-  
-  	for(int i; i < SALA_LINHAS; i++){
-  		
-  	printf("%c|", coluna[i]);
-  		
-  	for(int k; k < SALA_COLUNAS; k++){
+	  printf("  - - - - -\n");
 
-  	  if(sala->lugares[i][k]){
-  	    printf("X ");
-		  }
+  	for(i = 0; i < SALA_LINHAS; i++){
 
-	    else{
-		    printf("D ");
-		  }
-  	}
-  			
-  	printf("\n");
+      printf("%c|", coluna[i]);
+
+      for(k = 0; k < SALA_COLUNAS; k++){
+
+        if(sala->lugares[i][k]){
+          printf("X ");
+        }
+
+        else{
+          printf("O ");
+        }
+      }
+
+      printf("\n");
     }
-      
+
 }
 
 bool sala_reservar_lugar(struct Sala *sala, char linha, unsigned int coluna)
 {
-  // @todo: Implementar função para marcar um lugar da sala como reservado.
+  if (sala->lugares[linha - 'A'][coluna - 1])
+  {
+    return false;
+  }
+
+  sala->lugares[linha - 'A'][coluna - 1] = true;
   return true;
 }
 
 void sala_liberar_lugar(struct Sala *sala, char linha, unsigned int coluna)
 {
-  // @todo: Implementar função para marcar um lugar da sala como disponível.
+  sala->lugares[linha - 'A'][coluna - 1] = false;
 }
 
 void bilhete_imprimir(struct Bilhete *bilhete)
@@ -221,5 +323,25 @@ void bilhete_imprimir(struct Bilhete *bilhete)
 
 void bilhete_cancelar(struct Bilhete *bilhete)
 {
-  // @todo: Implementar função para cancelar um bilhete previamente comprado.
+  bilhete->cancelado = true;
+}
+
+int lscanf(char *text, const char *format, ...)
+{
+  static char buff[MAX_INPUT];
+  int ret;
+  va_list args;
+
+  if(text)
+  {
+    fputs(text, stdout);
+  }
+
+  fgets(buff, sizeof buff, stdin);
+
+  va_start(args, format);
+  ret = vsscanf(buff, format, args);
+  va_end(args);
+
+  return ret;
 }
